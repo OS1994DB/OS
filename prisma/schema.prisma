@@ -45,6 +45,8 @@ model User {
   HousekeepingLog     HousekeepingLog[]
   pppFiles            PppFile[]
   thirdParties        ThirdParty[]
+  handoverCreated     HandoverItem[]             @relation("HandoverCreator")
+  handoverCompleted   HandoverItem[]             @relation("HandoverCompleter")
 }
 
 model Resident {
@@ -387,4 +389,24 @@ model ThirdParty {
   createdAt   DateTime  @default(now())
 
   @@index([category, active])
+}
+
+// Handover / important information on the dashboard.
+//   kind: "NOTICE" (stays until a senior removes it) | "TASK" (anyone can tick it off)
+//   priority: "NORMAL" | "URGENT"
+model HandoverItem {
+  id            String    @id @default(cuid())
+  kind          String
+  priority      String    @default("NORMAL")
+  title         String
+  body          String    @default("")
+  createdById   String
+  createdBy     User      @relation("HandoverCreator", fields: [createdById], references: [id])
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+  completedById String?
+  completedBy   User?     @relation("HandoverCompleter", fields: [completedById], references: [id])
+  archivedAt    DateTime?
+
+  @@index([archivedAt, createdAt])
 }

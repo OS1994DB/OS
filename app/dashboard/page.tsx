@@ -1,13 +1,16 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { StatTile } from "@/components/StatTile";
-import { NoteBadge } from "@/components/NoteBadge";
+import { HandoverBoard } from "@/components/HandoverBoard";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { canManageHandover } from "@/lib/permissions";
 import { ResidentsIcon, StaffIcon, NoteIcon, CarePlanIcon, SparkleIcon, ShieldIcon, BuildingIcon, HandshakeIcon } from "@/components/icons";
 import { SITE_CHECK_TYPES } from "@/lib/siteChecks";
 
 const CARE_PLAN_REVIEW_DAYS = 90;
 
 export default async function DashboardOverviewPage() {
+  const session = await getServerSession(authOptions);
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
 
@@ -17,7 +20,7 @@ export default async function DashboardOverviewPage() {
   const dayAgo = new Date(Date.now() - 86_400_000);
   const in30 = new Date(Date.now() + 30 * 86_400_000);
 
-  const [residentCount, staffByRole, notesToday, residents, latestCarePlans, recentNotes,
+  const [residentCount, staffByRole, notesToday, residents, latestCarePlans, handoverRaw,
     hkDone, hkLogs, pppFiles, pppFolders, siteChecks, servicesActive, servicesDue] =
     await Promise.all([
       prisma.resident.count(),
@@ -28,10 +31,9 @@ export default async function DashboardOverviewPage() {
         orderBy: { version: "desc" },
         select: { residentId: true, createdAt: true },
       }),
-      prisma.note.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        include: { author: true, resident: true },
+      prisma.handoverItem.findMany({
+        where: { archivedAt: null, OR: [{ completedAt: null }, { completedAt: { gte: dayAgo } }] },
+        include: { createdBy: true, completedBy: true },
       }),
       prisma.housekeepingLog.count({ where: { createdAt: { gte: dayAgo }, status: "DONE" } }),
       prisma.housekeepingLog.findMany({ orderBy: { createdAt: "desc" }, take: 200, select: { area: true, task: true, status: true } }),
@@ -60,6 +62,12 @@ export default async function DashboardOverviewPage() {
   }).length;
   const siteFailing = [...siteLatest.values()].filter((c) => c.result === "FAIL").length;
   const siteIssues = siteOverdue + siteFailing;
+
+  // Urgent first, open before done, newest first.
+  const handover = [...handoverRaw].sort((a, b) => {
+    const rank = (x: typeof a) => (x.completedAt ? 2 : x.priority === "URGENT" ? 0 : 1);
+    return rank(a) - rank(b) || b.createdAt.getTime() - a.createdAt.getTime();
+  });
 
   const staffCount = staffByRole.reduce((sum, r) => sum + r._count, 0);
   const staffSummary = staffByRole
@@ -156,36 +164,14 @@ export default async function DashboardOverviewPage() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl2 border border-ink-700/10 bg-cream-100 shadow-card">
-        <div className="border-b border-ink-700/10 px-5 py-4">
-          <h2 className="font-display font-semibold text-ink-800">Recent notes</h2>
-        </div>
-        {recentNotes.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-ink-600">No notes logged yet.</p>
-        ) : (
-          <ul className="divide-y divide-ink-700/10">
-            {recentNotes.map((note) => (
-              <li key={note.id} className="px-5 py-4 transition-colors hover:bg-cream-50">
-                <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href={`/dashboard/residents/${note.residentId}`}
-                      className="text-sm font-medium text-ink-800 hover:text-brand-700"
-                    >
-                      {note.resident.name}
-                    </Link>
-                    <NoteBadge category={note.category} />
-                  </div>
-                  <span className="text-xs text-ink-600">
-                    {note.author.name} · {note.createdAt.toLocaleString("en-GB")}
-                  </span>
-                </div>
-                <p className="text-sm text-ink-700">{note.body}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <HandoverBoard
+        canManage={canManageHandover(session!.user.role)}
+        items={handover.map((h) => ({
+          id: h.id, kind: h.kind, priority: h.priority, title: h.title, body: h.body,
+          createdAt: h.createdAt.toISOString(), createdBy: h.createdBy.name,
+          completedAt: h.completedAt?.toISOString() ?? null, completedBy: h.completedBy?.name ?? null,
+        }))}
+      />
     </div>
   );
 }

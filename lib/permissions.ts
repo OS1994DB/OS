@@ -27,3 +27,7 @@ export function canReviewIncidents(role: string) {
 export function canManagePpp(role: string) {
   return role === "MANAGER" || role === "SENIOR_CARER";
 }
+
+export function canManageHandover(role: string) {
+  return role === "MANAGER" || role === "SENIOR_CARER";
+}
