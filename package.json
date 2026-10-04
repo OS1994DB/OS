@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx scripts/seed.ts",
-    "db:use-postgres": "node scripts/use-postgres.mjs"
+    "db:use-postgres": "node scripts/use-postgres.mjs",
+    "vercel-build": "prisma generate && prisma migrate deploy && tsx scripts/seed.ts && next build"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",

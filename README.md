@@ -129,3 +129,12 @@ named individuals), so a few things matter beyond "does it run":
 
 Keep it this small until the home actually asks for more — a 20-resident
 home doesn't need the surface area of a multi-tenant product.
+
+## Demo deployment (Vercel)
+
+For review only: `npm run vercel-build` seeds a SQLite file at build time and
+the app copies it to `/tmp` at runtime (`DEMO_DB_COPY=true`). Data resets on
+cold start and isn't shared between instances. Required env vars:
+`DATABASE_URL=file:./demo.db`, `DEMO_DB_COPY=true`, `NEXTAUTH_SECRET`,
+`SEED_MANAGER_EMAIL`, `SEED_MANAGER_PASSWORD`, `SEED_SAMPLE_DATA=true`.
+Use Postgres (`npm run db:use-postgres`) for anything real.
