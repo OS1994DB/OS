@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ShieldIcon } from "@/components/icons";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -60,6 +62,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <p className="text-xs text-ink-600">{roleLabel(role)}</p>
             </div>
           </div>
+          {canManageStaff(role) && (
+            <Link
+              href="/dashboard/admin"
+              className="mb-1 flex items-center gap-2.5 rounded-xl2 px-3 py-2 text-sm font-medium text-ink-600 transition-colors hover:bg-white/5 hover:text-ink-800"
+            >
+              <ShieldIcon className="h-[18px] w-[18px]" />
+              Admin
+            </Link>
+          )}
           <SignOutButton variant="light" />
         </div>
       </aside>
@@ -73,7 +84,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </div>
             <span className="font-display text-sm font-semibold text-ink-800">Westcliff Lodge</span>
           </div>
-          <SignOutButton variant="light" />
+          <div className="flex items-center gap-3">
+            {canManageStaff(role) && (
+              <Link href="/dashboard/admin" className="text-sm font-medium text-ink-600 hover:text-brand-600">
+                Admin
+              </Link>
+            )}
+            <SignOutButton variant="light" />
+          </div>
         </div>
         <div className="border-t border-ink-700/10 px-3 py-2">
           <SidebarNav showStaff={canManageStaff(role)} variant="topbar" unreadMessages={unreadMessages} />
