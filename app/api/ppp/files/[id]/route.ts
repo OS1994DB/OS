@@ -23,7 +23,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   });
 }
 
-// Move a file to another folder (folderId null = top level).
+// Move a file to another folder.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
@@ -33,7 +33,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const parsed = await parseJsonBody(req);
   if (!parsed || !("folderId" in parsed)) return NextResponse.json({ error: "Missing folderId" }, { status: 400 });
   const folderId = typeof parsed.folderId === "string" && parsed.folderId ? parsed.folderId : null;
-  if (folderId && !(await prisma.pppFolder.findUnique({ where: { id: folderId }, select: { id: true } }))) {
+  if (!folderId) return NextResponse.json({ error: "Choose a folder" }, { status: 400 });
+  if (!(await prisma.pppFolder.findUnique({ where: { id: folderId }, select: { id: true } }))) {
     return NextResponse.json({ error: "Folder not found" }, { status: 404 });
   }
   const f = await prisma.pppFile.findUnique({ where: { id }, select: { id: true, folderId: true } });

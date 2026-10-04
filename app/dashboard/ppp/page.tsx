@@ -4,7 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canManagePpp } from "@/lib/permissions";
-import { PppActions, PppFileList } from "@/components/PppLibrary";
+import { BackLink } from "@/components/BackLink";
+import { DeleteFolderButton, PppActions, PppFileList } from "@/components/PppLibrary";
 
 export default async function PppPage({ searchParams }: { searchParams: Promise<{ folder?: string }> }) {
   const { folder } = await searchParams;
@@ -22,6 +23,7 @@ export default async function PppPage({ searchParams }: { searchParams: Promise<
   const current = folder ? byId.get(folder) : null;
   if (folder && !current) notFound();
   const currentId = current?.id ?? null;
+  const parent = current?.parentId ? byId.get(current.parentId) : null;
 
   const crumbs: { id: string; name: string }[] = [];
   for (let cur = current; cur; cur = cur.parentId ? byId.get(cur.parentId) : undefined) crumbs.unshift({ id: cur.id, name: cur.name });
@@ -35,29 +37,54 @@ export default async function PppPage({ searchParams }: { searchParams: Promise<
 
   return (
     <div>
-      <div className="mb-4">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">PPP</h1>
-        <p className="mt-1 text-sm text-ink-600">Policies, procedures and protocols</p>
+      {current && (
+        <BackLink
+          href={parent ? `/dashboard/ppp?folder=${parent.id}` : "/dashboard/ppp"}
+          label={parent ? parent.name : "PPP"}
+        />
+      )}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">{current ? current.name : "PPP"}</h1>
+          <p className="mt-1 text-sm text-ink-600">{current ? "Policies, procedures and protocols" : "Policies, procedures and protocols — open a folder to see its files"}</p>
+        </div>
+        {current && canManage && (
+          <DeleteFolderButton
+            id={current.id}
+            name={current.name}
+            afterHref={parent ? `/dashboard/ppp?folder=${parent.id}` : "/dashboard/ppp"}
+          />
+        )}
       </div>
 
-      <nav className="mb-4 flex flex-wrap items-center gap-1 text-sm text-ink-600">
-        <Link href="/dashboard/ppp" className="hover:text-brand-600">All files</Link>
-        {crumbs.map((c) => (
-          <span key={c.id} className="flex items-center gap-1">
-            <span>/</span>
-            <Link href={`/dashboard/ppp?folder=${c.id}`} className="hover:text-brand-600">{c.name}</Link>
-          </span>
-        ))}
-      </nav>
+      {crumbs.length > 0 && (
+        <nav className="mb-4 flex flex-wrap items-center gap-1 text-sm text-ink-600">
+          <Link href="/dashboard/ppp" className="hover:text-brand-600">PPP</Link>
+          {crumbs.map((c) => (
+            <span key={c.id} className="flex items-center gap-1">
+              <span>/</span>
+              <Link href={`/dashboard/ppp?folder=${c.id}`} className="hover:text-brand-600">{c.name}</Link>
+            </span>
+          ))}
+        </nav>
+      )}
 
       <PppActions folderId={currentId} canManage={canManage} />
 
       {subfolders.length > 0 && (
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {subfolders.map((f) => (
-            <Link key={f.id} href={`/dashboard/ppp?folder=${f.id}`} className="rounded-xl2 border border-ink-700/10 bg-cream-100 p-4 text-sm font-medium text-ink-800 shadow-card hover:border-brand-500/40">
-              📁 {f.name}
-            </Link>
+            <div key={f.id} className="flex flex-col items-center rounded-xl2 border border-ink-700/10 bg-cream-100 p-4 text-center shadow-card">
+              <Link href={`/dashboard/ppp?folder=${f.id}`} className="flex w-full flex-col items-center hover:text-brand-700">
+                <span className="text-3xl" aria-hidden>📁</span>
+                <span className="mt-2 w-full truncate font-medium text-ink-800">{f.name}</span>
+              </Link>
+              {canManage && (
+                <div className="mt-2">
+                  <DeleteFolderButton id={f.id} name={f.name} small />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

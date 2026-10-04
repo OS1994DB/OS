@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { BackLink } from "@/components/BackLink";
 import { prisma } from "@/lib/prisma";
 import { canManageStaff } from "@/lib/permissions";
 
@@ -12,7 +13,7 @@ export default async function AuditLogPage() {
 
   return (
     <div>
-      <Link href="/dashboard/admin" className="mb-3 inline-block text-sm font-medium text-ink-600 hover:text-brand-600">← Admin</Link>
+      <BackLink href="/dashboard/admin" label="Admin" />
       <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Audit log</h1>
       <p className="mb-6 mt-1 text-sm text-ink-600">Latest 200 actions: who did what, and when</p>
       <ul className="overflow-hidden rounded-xl2 border border-ink-700/10 bg-cream-100 shadow-card">

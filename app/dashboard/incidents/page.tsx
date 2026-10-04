@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BackLink } from "@/components/BackLink";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { canReviewIncidents } from "@/lib/permissions";
@@ -19,7 +20,7 @@ export default async function IncidentsOverviewPage({ searchParams }: { searchPa
 
   return (
     <div>
-      <Link href="/dashboard/admin" className="mb-3 inline-block text-sm font-medium text-ink-600 hover:text-brand-600">← Admin</Link>
+      <BackLink href="/dashboard/admin" label="Admin" />
       <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Incidents overview</h1>
       <p className="mb-6 mt-1 text-sm text-ink-600">All residents · incidents are reported inside each resident&apos;s tabs</p>
       <div className="mb-4 flex gap-2">

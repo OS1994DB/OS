@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageResidents } from "@/lib/permissions";
+import { BackLink } from "@/components/BackLink";
 import { ResidentGreenSection } from "@/components/ResidentGreenSection";
 import { ResidentInfoBar } from "@/components/ResidentInfoBar";
 import { EditableField } from "@/components/EditableField";
@@ -60,6 +61,7 @@ export default async function ResidentPage({ params }: { params: Promise<{ id: s
 
   return (
     <div>
+      <BackLink href="/dashboard/residents" label="residents" />
       <div className="mb-6 flex items-center gap-5 rounded-xl2 border border-ink-700/10 bg-cream-100 p-5 shadow-card">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-brand-500/40 bg-brand-50 font-display text-2xl font-semibold text-brand-700">
           {initials(resident.name)}

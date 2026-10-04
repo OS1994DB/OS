@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageTemplates } from "@/lib/permissions";
 import { parseAreas, parseItems } from "@/lib/templates";
+import { BackLink } from "@/components/BackLink";
 import { TemplateBuilder } from "@/components/TemplateBuilder";
 
 export default async function EditTemplatePage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,6 +15,7 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
   if (!t) notFound();
   return (
     <div>
+      <BackLink href="/dashboard/admin/templates" label="templates" />
       <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Edit template</h1>
       <p className="mb-6 mt-1 text-sm text-ink-600">
         Saving creates version {t.version + 1}. Forms already completed keep the questions they were answered with.

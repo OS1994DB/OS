@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { BackLink } from "@/components/BackLink";
 import { prisma } from "@/lib/prisma";
 import { canManageTemplates } from "@/lib/permissions";
 import { TEMPLATE_AREAS, parseAreas, parseItems } from "@/lib/templates";
@@ -20,7 +21,7 @@ export default async function TemplatesPage() {
 
   return (
     <div>
-      <Link href="/dashboard/admin" className="mb-3 inline-block text-sm font-medium text-ink-600 hover:text-brand-600">← Admin</Link>
+      <BackLink href="/dashboard/admin" label="Admin" />
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Templates</h1>

@@ -27,6 +27,7 @@ export async function POST(req: Request) {
   if (!mimeType) {
     return NextResponse.json({ error: `Unsupported file type. Allowed: ${Object.keys(PPP_TYPES).join(", ")}` }, { status: 400 });
   }
+  if (!folderId) return NextResponse.json({ error: "Open a folder first — files are kept inside folders" }, { status: 400 });
   if (folderId && !(await prisma.pppFolder.findUnique({ where: { id: folderId }, select: { id: true } }))) {
     return NextResponse.json({ error: "Folder not found" }, { status: 404 });
   }

@@ -10,6 +10,7 @@ function kb(n: number) {
   return n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
+// Add folder (anywhere) and Add file (only inside a folder).
 export function PppActions({ folderId, canManage }: { folderId: string | null; canManage: boolean }) {
   const router = useRouter();
   const [mode, setMode] = useState<"file" | "folder" | null>(null);
@@ -45,9 +46,9 @@ export function PppActions({ folderId, canManage }: { folderId: string | null; c
 
   return (
     <div className="mb-6">
-      <div className="flex gap-2">
-        <button onClick={() => setMode("file")} className="btn-primary">+ Add file</button>
-        <button onClick={() => setMode("folder")} className="btn-secondary">+ Add folder</button>
+      <div className="flex flex-wrap gap-2">
+        {folderId && <button onClick={() => setMode("file")} className="btn-primary">+ Add file</button>}
+        <button onClick={() => setMode("folder")} className={folderId ? "btn-secondary" : "btn-primary"}>+ Add folder</button>
       </div>
       {mode && (
         <form onSubmit={submit} className="mt-3 flex flex-col gap-3 rounded-xl2 border border-ink-700/10 bg-cream-100 p-4 shadow-card sm:flex-row sm:items-center">
@@ -73,11 +74,12 @@ export function PppFileList({
   const [moving, setMoving] = useState<string | null>(null);
 
   async function move(id: string, target: string) {
+    if (!target) return;
     setError("");
     const res = await fetch(`/api/ppp/files/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ folderId: target || null }),
+      body: JSON.stringify({ folderId: target }),
     });
     if (!res.ok) {
       setError((await res.json().catch(() => ({}))).error ?? "Move failed.");
@@ -98,9 +100,10 @@ export function PppFileList({
     router.refresh();
   }
 
-  if (files.length === 0) {
-    return <p className="rounded-xl2 border border-dashed border-ink-700/15 bg-cream-100 py-8 text-center text-sm text-ink-600">No files here.</p>;
-  }
+  // Nothing to show: no empty-state message.
+  if (files.length === 0) return null;
+
+  const targets = folders.filter((o) => o.id !== currentFolderId);
   return (
     <>
       {error && <p className="mb-2 rounded-xl2 bg-coral-50 px-3 py-2 text-sm text-coral-700">{error}</p>}
@@ -111,15 +114,15 @@ export function PppFileList({
             <span className="text-xs text-ink-600">{kb(f.size)} · {new Date(f.createdAt).toLocaleDateString("en-GB")} · {f.by}</span>
             {canManage && (moving === f.id ? (
               <span className="flex items-center gap-2">
-                <select defaultValue={currentFolderId ?? ""} onChange={(e) => move(f.id, e.target.value)} className="field w-52">
-                  <option value="">Top level</option>
-                  {folders.map((o) => <option key={o.id} value={o.id}>{o.path}</option>)}
+                <select defaultValue="" onChange={(e) => move(f.id, e.target.value)} className="field w-52">
+                  <option value="" disabled>Move to folder…</option>
+                  {targets.map((o) => <option key={o.id} value={o.id}>{o.path}</option>)}
                 </select>
                 <button onClick={() => setMoving(null)} className="btn-secondary">Cancel</button>
               </span>
             ) : (
               <span className="flex gap-2">
-                <button onClick={() => setMoving(f.id)} className="btn-secondary">Move</button>
+                {targets.length > 0 && <button onClick={() => setMoving(f.id)} className="btn-secondary">Move</button>}
                 <button onClick={() => remove(f.id, f.name)} className="btn-secondary text-coral-700">Delete</button>
               </span>
             ))}
@@ -127,5 +130,50 @@ export function PppFileList({
         ))}
       </ul>
     </>
+  );
+}
+
+// Deletes a folder. Non-empty folders ask for confirmation, quoting exactly what will go.
+export function DeleteFolderButton({
+  id, name, afterHref, small = false,
+}: { id: string; name: string; afterHref?: string; small?: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function del() {
+    if (!window.confirm(`Delete the folder "${name}"?`)) return;
+    setError("");
+    setBusy(true);
+    let res = await fetch(`/api/ppp/folders/${id}`, { method: "DELETE" });
+    if (res.status === 409) {
+      // Not empty: say exactly what will be lost and ask again.
+      const info = await res.json().catch(() => ({}));
+      const parts = [
+        info.fileCount ? `${info.fileCount} file${info.fileCount === 1 ? "" : "s"}` : "",
+        info.subfolderCount ? `${info.subfolderCount} subfolder${info.subfolderCount === 1 ? "" : "s"}` : "",
+      ].filter(Boolean).join(" and ");
+      if (!window.confirm(`"${name}" contains ${parts}. Deleting it permanently deletes all of them. Delete anyway?`)) {
+        setBusy(false);
+        return;
+      }
+      res = await fetch(`/api/ppp/folders/${id}?confirm=true`, { method: "DELETE" });
+    }
+    setBusy(false);
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).error ?? "Delete failed.");
+      return;
+    }
+    if (afterHref) router.push(afterHref);
+    router.refresh();
+  }
+
+  return (
+    <span className="inline-flex flex-col items-center">
+      <button onClick={del} disabled={busy} className={`btn-secondary text-coral-700 ${small ? "!px-2.5 !py-1 text-xs" : ""}`}>
+        {busy ? "Deleting..." : small ? "Delete" : "Delete folder"}
+      </button>
+      {error && <span className="mt-1 text-xs text-coral-700">{error}</span>}
+    </span>
   );
 }
