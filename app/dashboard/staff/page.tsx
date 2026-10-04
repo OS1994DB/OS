@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageStaff } from "@/lib/permissions";
 import { AddStaffForm } from "@/components/AddStaffForm";
+import { StaffActions } from "@/components/StaffActions";
 
 function initials(name: string) {
   return name
@@ -46,7 +47,10 @@ export default async function StaffPage() {
               {initials(s.name)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-ink-800">{s.name}</p>
+              <p className="font-medium text-ink-800">
+                {s.name}
+                {!s.active && <span className="ml-2 text-xs font-normal text-ink-600">(inactive)</span>}
+              </p>
               <p className="truncate text-sm text-ink-600">{s.email}</p>
             </div>
             <span
@@ -56,6 +60,7 @@ export default async function StaffPage() {
             >
               {s.role.replace("_", " ")}
             </span>
+            <StaffActions id={s.id} active={s.active} isSelf={s.id === session!.user.id} />
           </li>
         ))}
       </ul>

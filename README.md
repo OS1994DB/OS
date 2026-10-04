@@ -101,9 +101,10 @@ named individuals), so a few things matter beyond "does it run":
 - **Data protection**: the care home (as data controller) should have this
   system covered under its existing data protection policy / ICO
   registration, and a basic record of processing for it.
-- **Password reset**: not built yet — for now, a manager can only create
-  new accounts, not reset passwords. Worth adding once real staff use this
-  daily.
+- **Password reset / deactivation**: managers can reset a password or
+  deactivate/reactivate an account from the Staff page (both audit-logged).
+  Self-service reset by email is not built. Note sessions are JWTs, so a
+  deactivated user's existing session stays valid until it expires.
 
 ## Deliberately not built yet (add only if actually needed)
 
@@ -111,7 +112,7 @@ named individuals), so a few things matter beyond "does it run":
 - A native mobile app — the web app is responsive and works fine on phones
   as-is for point-of-care note-taking
 - AI-assisted care plan writing
-- Password reset / email
+- Self-service password reset / email
 
 Keep it this small until the home actually asks for more — a 20-resident
 home doesn't need the surface area of a multi-tenant product.
