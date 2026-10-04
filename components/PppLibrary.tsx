@@ -87,6 +87,17 @@ export function PppFileList({
     router.refresh();
   }
 
+  async function remove(id: string, name: string) {
+    if (!window.confirm(`Delete "${name}"? This can't be undone.`)) return;
+    setError("");
+    const res = await fetch(`/api/ppp/files/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).error ?? "Delete failed.");
+      return;
+    }
+    router.refresh();
+  }
+
   if (files.length === 0) {
     return <p className="rounded-xl2 border border-dashed border-ink-700/15 bg-cream-100 py-8 text-center text-sm text-ink-600">No files here.</p>;
   }
@@ -107,7 +118,10 @@ export function PppFileList({
                 <button onClick={() => setMoving(null)} className="btn-secondary">Cancel</button>
               </span>
             ) : (
-              <button onClick={() => setMoving(f.id)} className="btn-secondary">Move</button>
+              <span className="flex gap-2">
+                <button onClick={() => setMoving(f.id)} className="btn-secondary">Move</button>
+                <button onClick={() => remove(f.id, f.name)} className="btn-secondary text-coral-700">Delete</button>
+              </span>
             ))}
           </li>
         ))}

@@ -43,3 +43,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   await logAudit({ userId: session.user.id, action: "ppp.file_move", entityType: "PppFile", entityId: id, metadata: { from: f.folderId, to: folderId } });
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!canManagePpp(session.user.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const f = await prisma.pppFile.findUnique({ where: { id }, select: { id: true, name: true, folderId: true } });
+  if (!f) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await prisma.pppFile.delete({ where: { id } });
+  await logAudit({ userId: session.user.id, action: "ppp.file_delete", entityType: "PppFile", entityId: id, metadata: { name: f.name, folderId: f.folderId } });
+  return NextResponse.json({ ok: true });
+}
