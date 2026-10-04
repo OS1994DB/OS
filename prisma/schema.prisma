@@ -43,7 +43,7 @@ model User {
   siteChecks          SiteCheck[]
   chatMessages        ChatMessage[]
   HousekeepingLog     HousekeepingLog[]
-  PpeMovement         PpeMovement[]
+  pppFiles            PppFile[]
 }
 
 model Resident {
@@ -339,26 +339,31 @@ model HousekeepingLog {
   @@index([area, createdAt])
 }
 
-// Protective equipment stock (gloves, aprons, masks...). Stock on hand is the
-// sum of PpeMovement.change; movements are append-only.
-model PpeItem {
-  id           String        @id @default(cuid())
-  name         String        @unique
-  unit         String        @default("box")
-  reorderLevel Int           @default(0)
-  createdAt    DateTime      @default(now())
-  movements    PpeMovement[]
+// Policies, procedures and protocols library: folders (nestable) and files.
+// File bytes live in the database (size-capped in the upload route).
+model PppFolder {
+  id        String      @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    PppFolder?  @relation("PppTree", fields: [parentId], references: [id])
+  children  PppFolder[] @relation("PppTree")
+  files     PppFile[]
+  createdAt DateTime    @default(now())
+
+  @@index([parentId])
 }
 
-model PpeMovement {
-  id        String   @id @default(cuid())
-  itemId    String
-  item      PpeItem  @relation(fields: [itemId], references: [id])
-  change    Int // positive = stock received, negative = used/issued
-  note      String   @default("")
-  byId      String
-  by        User     @relation(fields: [byId], references: [id])
-  createdAt DateTime @default(now())
+model PppFile {
+  id           String     @id @default(cuid())
+  name         String
+  mimeType     String
+  size         Int
+  data         Bytes
+  folderId     String?
+  folder       PppFolder? @relation(fields: [folderId], references: [id])
+  uploadedById String
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime   @default(now())
 
-  @@index([itemId, createdAt])
+  @@index([folderId])
 }

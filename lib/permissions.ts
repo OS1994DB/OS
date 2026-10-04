@@ -23,3 +23,7 @@ export function canManageMedications(role: string) {
 export function canReviewIncidents(role: string) {
   return role === "MANAGER";
 }
+
+export function canManagePpp(role: string) {
+  return role === "MANAGER" || role === "SENIOR_CARER";
+}
