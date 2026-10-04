@@ -42,6 +42,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   siteChecks          SiteCheck[]
   chatMessages        ChatMessage[]
+  HousekeepingLog     HousekeepingLog[]
 }
 
 model Resident {
@@ -318,4 +319,21 @@ model ChatMessage {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// Cleaning / laundry log. Append-only.
+//   task: "DAILY_CLEAN" | "DEEP_CLEAN" | "LAUNDRY" | "BEDDING_CHANGE" | "INFECTION_CLEAN" | "WASTE" | "OTHER"
+//   status: "DONE" | "NEEDS_ATTENTION"
+model HousekeepingLog {
+  id        String   @id @default(cuid())
+  task      String
+  area      String
+  status    String
+  notes     String   @default("")
+  doneById  String
+  doneBy    User     @relation(fields: [doneById], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([area, createdAt])
 }
