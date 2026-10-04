@@ -47,6 +47,8 @@ model User {
   thirdParties        ThirdParty[]
   handoverCreated     HandoverItem[]             @relation("HandoverCreator")
   handoverCompleted   HandoverItem[]             @relation("HandoverCompleter")
+  ChecklistTemplate   ChecklistTemplate[]
+  ChecklistSubmission ChecklistSubmission[]
 }
 
 model Resident {
@@ -61,16 +63,17 @@ model Resident {
   customReference String?
   createdAt       DateTime @default(now())
 
-  carePlans        CarePlanVersion[]
-  carePlanReviews  CarePlanReview[]
-  consentEntries   ConsentEntry[]
-  notes            Note[]
-  assessments      Assessment[]
-  residentDetails  ResidentDetail[]
-  staffMessages    StaffMessage[]
-  medications      Medication[]
-  medicationAdmins MedicationAdministration[]
-  incidents        Incident[]
+  carePlans           CarePlanVersion[]
+  carePlanReviews     CarePlanReview[]
+  consentEntries      ConsentEntry[]
+  notes               Note[]
+  assessments         Assessment[]
+  residentDetails     ResidentDetail[]
+  staffMessages       StaffMessage[]
+  medications         Medication[]
+  medicationAdmins    MedicationAdministration[]
+  incidents           Incident[]
+  ChecklistSubmission ChecklistSubmission[]
 }
 
 // Care plans are append-only and split into fixed categories (Mobility,
@@ -409,4 +412,48 @@ model HandoverItem {
   archivedAt    DateTime?
 
   @@index([archivedAt, createdAt])
+}
+
+// Reusable checklist templates (audits, risk assessments, checks) built by
+// managers in Admin. `items` and `areas` are JSON text (see lib/templates.ts).
+//   areas: any of "SITE" | "RISK_ASSESSMENT" | "HOUSEKEEPING" | "AUDIT"
+model ChecklistTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  items       String
+  areas       String
+  version     Int      @default(1)
+  active      Boolean  @default(true)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  submissions ChecklistSubmission[]
+}
+
+// A completed template. Append-only; stores a snapshot of the questions and
+// answers so later template edits never change history.
+//   result: "PASS" | "ACTION_NEEDED"
+model ChecklistSubmission {
+  id              String            @id @default(cuid())
+  templateId      String
+  template        ChecklistTemplate @relation(fields: [templateId], references: [id])
+  templateName    String
+  templateVersion Int
+  area            String
+  residentId      String?
+  resident        Resident?         @relation(fields: [residentId], references: [id])
+  location        String            @default("")
+  answers         String
+  result          String
+  notes           String            @default("")
+  completedById   String
+  completedBy     User              @relation(fields: [completedById], references: [id])
+  createdAt       DateTime          @default(now())
+
+  @@index([area, createdAt])
+  @@index([residentId, createdAt])
+  @@index([templateId])
 }

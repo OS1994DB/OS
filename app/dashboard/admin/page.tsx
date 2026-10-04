@@ -33,7 +33,10 @@ export default async function AdminPage() {
           <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Admin</h1>
           <p className="mt-1 text-sm text-ink-600">Managers only</p>
         </div>
-        <Link href="/dashboard/staff" className="btn-primary">Manage staff accounts</Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/admin/templates" className="btn-primary">Templates</Link>
+          <Link href="/dashboard/staff" className="btn-secondary">Staff accounts</Link>
+        </div>
       </div>
 
       <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

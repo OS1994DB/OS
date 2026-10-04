@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { HOUSEKEEPING_TASKS } from "@/lib/housekeeping";
 import { HousekeepingForm } from "@/components/HousekeepingForm";
+import { runnableTemplates, recentSubmissions } from "@/lib/templateQueries";
+import { TemplateRunner } from "@/components/TemplateRunner";
+import { SubmissionList } from "@/components/SubmissionList";
 
 export default async function HousekeepingPage() {
   const since = new Date(Date.now() - 86_400_000);
@@ -8,6 +11,7 @@ export default async function HousekeepingPage() {
     prisma.housekeepingLog.findMany({ orderBy: { createdAt: "desc" }, take: 100, include: { doneBy: true } }),
     prisma.housekeepingLog.count({ where: { createdAt: { gte: since }, status: "DONE" } }),
   ]);
+  const [templates, submissions] = await Promise.all([runnableTemplates("HOUSEKEEPING"), recentSubmissions("HOUSEKEEPING")]);
   const label = (c: string) => HOUSEKEEPING_TASKS.find((t) => t.code === c)?.label ?? c;
   // An area's latest entry decides whether it still needs attention.
   const latestByAreaTask = new Map<string, (typeof logs)[number]>();
@@ -26,6 +30,8 @@ export default async function HousekeepingPage() {
         </div>
         <HousekeepingForm />
       </div>
+
+      <TemplateRunner area="HOUSEKEEPING" templates={templates} />
 
       {open.length > 0 && (
         <div className="mb-8 rounded-xl2 border border-coral-700/30 bg-coral-50 p-4">
@@ -56,6 +62,7 @@ export default async function HousekeepingPage() {
           ))}
         </ul>
       )}
+      <SubmissionList rows={submissions} title="Completed housekeeping templates" empty="No templates completed yet." />
     </div>
   );
 }

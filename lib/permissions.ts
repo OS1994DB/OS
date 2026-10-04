@@ -31,3 +31,13 @@ export function canManagePpp(role: string) {
 export function canManageHandover(role: string) {
   return role === "MANAGER" || role === "SENIOR_CARER";
 }
+
+export function canManageTemplates(role: string) {
+  return role === "MANAGER";
+}
+
+// Who may complete a template in a given area.
+export function canCompleteTemplate(role: string, area: string) {
+  if (area === "RISK_ASSESSMENT" || area === "AUDIT") return role === "MANAGER" || role === "SENIOR_CARER";
+  return true;
+}

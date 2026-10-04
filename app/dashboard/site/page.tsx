@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { SITE_CHECK_TYPES } from "@/lib/siteChecks";
 import { SiteCheckForm } from "@/components/SiteCheckForm";
+import { runnableTemplates, recentSubmissions } from "@/lib/templateQueries";
+import { TemplateRunner } from "@/components/TemplateRunner";
+import { SubmissionList } from "@/components/SubmissionList";
 
 const DAY = 86_400_000;
 
@@ -10,6 +13,7 @@ export default async function SitePage() {
     take: 100,
     include: { checkedBy: true },
   });
+  const [templates, submissions] = await Promise.all([runnableTemplates("SITE"), recentSubmissions("SITE")]);
   const label = (code: string) => SITE_CHECK_TYPES.find((t) => t.code === code)?.label ?? code;
 
   const scheduled = SITE_CHECK_TYPES.filter((t) => t.everyDays > 0).map((t) => {
@@ -28,6 +32,8 @@ export default async function SitePage() {
         </div>
         <SiteCheckForm />
       </div>
+
+      <TemplateRunner area="SITE" templates={templates} />
 
       <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {scheduled.map((t) => (
@@ -69,6 +75,7 @@ export default async function SitePage() {
           ))}
         </ul>
       )}
+      <SubmissionList rows={submissions} title="Completed check templates" empty="No templates completed yet." />
     </div>
   );
 }
