@@ -16,7 +16,11 @@ function find(direct) {
   const pooledList = e.filter(([k]) => !unpooled(k)).sort((a, b) => rank(a[0]) - rank(b[0]));
   const directList = e.filter(([k]) => unpooled(k)).sort((a, b) => rank(a[0]) - rank(b[0]));
   const list = direct ? [...directList, ...pooledList] : [...pooledList, ...directList];
-  return list[0][1];
+  return direct ? list[0][1] : withPgbouncer(list[0][1]);
+}
+function withPgbouncer(url) {
+  if (!/-pooler\.|pgbouncer/i.test(url) || /[?&]pgbouncer=/i.test(url)) return url;
+  return url + (url.includes("?") ? "&" : "?") + "pgbouncer=true&connect_timeout=15";
 }
 const run = (cmd, env = {}) => execSync(cmd, { stdio: "inherit", env: { ...process.env, ...env } });
 

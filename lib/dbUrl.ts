@@ -11,5 +11,12 @@ export function findPostgresUrl(env: Record<string, string | undefined>, direct 
   const pooledList = entries.filter(([k]) => !unpooled(k)).sort((a, b) => rank(a[0]) - rank(b[0]));
   const directList = entries.filter(([k]) => unpooled(k)).sort((a, b) => rank(a[0]) - rank(b[0]));
   const list = direct ? [...directList, ...pooledList] : [...pooledList, ...directList];
-  return list[0][1];
+  return direct ? list[0][1] : withPgbouncer(list[0][1]);
+}
+
+// Poolers in transaction mode (Neon "-pooler" hosts, pgbouncer) break Prisma's
+// prepared statements under concurrent queries unless told about pgbouncer.
+export function withPgbouncer(url: string): string {
+  if (!/-pooler\.|pgbouncer/i.test(url) || /[?&]pgbouncer=/i.test(url)) return url;
+  return url + (url.includes("?") ? "&" : "?") + "pgbouncer=true&connect_timeout=15";
 }
