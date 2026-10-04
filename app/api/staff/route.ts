@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { ALL_ROLES, canManageStaff } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { parseJsonBody } from "@/lib/request";
-import { USERNAME_RE, normalizeUsername } from "@/lib/username";
+import { USERNAME_HELP, USERNAME_RE, normalizeUsername } from "@/lib/username";
 
 const ROLES = ALL_ROLES;
 
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
   if (!USERNAME_RE.test(username)) {
     return NextResponse.json(
-      { error: "Username must be 3–30 characters: lowercase letters, numbers, dots, dashes or underscores" },
+      { error: `Username must be ${USERNAME_HELP}` },
       { status: 400 },
     );
   }

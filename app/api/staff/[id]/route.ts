@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { canManageStaff } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { parseJsonBody } from "@/lib/request";
+import { USERNAME_HELP, USERNAME_RE, normalizeUsername } from "@/lib/username";
 
 // Manager-only: reset a staff member's password and/or (de)activate the account.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -18,9 +19,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const parsed = await parseJsonBody(req);
   if (!parsed) return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  const { password, active } = parsed as { password?: unknown; active?: unknown };
+  const { password, active, username: rawUsername } = parsed as { password?: unknown; active?: unknown; username?: unknown };
 
-  const data: { passwordHash?: string; active?: boolean } = {};
+  const data: { passwordHash?: string; active?: boolean; username?: string } = {};
   if (password !== undefined) {
     if (typeof password !== "string" || password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
@@ -35,6 +36,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "You can't deactivate your own account" }, { status: 400 });
     }
     data.active = active;
+  }
+  if (rawUsername !== undefined) {
+    const username = normalizeUsername(rawUsername);
+    if (!USERNAME_RE.test(username)) {
+      return NextResponse.json({ error: `Username must be ${USERNAME_HELP}` }, { status: 400 });
+    }
+    const taken = await prisma.user.findUnique({ where: { username } });
+    if (taken && taken.id !== id) {
+      return NextResponse.json({ error: "That username is already taken" }, { status: 409 });
+    }
+    data.username = username;
   }
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
@@ -51,6 +63,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       action: "user.password_reset",
       entityType: "User",
       entityId: id,
+    });
+  }
+  if (data.username) {
+    await logAudit({
+      userId: session.user.id,
+      action: "user.rename",
+      entityType: "User",
+      entityId: id,
+      metadata: { from: target.username, to: data.username },
     });
   }
   if (data.active !== undefined) {

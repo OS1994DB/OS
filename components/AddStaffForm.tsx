@@ -61,8 +61,8 @@ export function AddStaffForm() {
         required
         minLength={3}
         maxLength={30}
-        pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,29}"
-        title="3–30 characters: letters, numbers, dots, dashes or underscores"
+        pattern="[A-Za-z0-9][A-Za-z0-9._ \-]{1,28}[A-Za-z0-9]"
+        title="3–30 characters: letters, numbers, spaces, dots, dashes or underscores"
         autoCapitalize="none"
         autoComplete="off"
         placeholder="Username (e.g. jsmith)"

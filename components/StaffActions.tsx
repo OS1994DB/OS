@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function StaffActions({ id, name, active, isSelf }: { id: string; name: string; active: boolean; isSelf: boolean }) {
+export function StaffActions({ id, name, username, active, isSelf }: { id: string; name: string; username: string; active: boolean; isSelf: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -32,6 +32,14 @@ export function StaffActions({ id, name, active, isSelf }: { id: string; name: s
     if (await patch({ password })) window.alert("Password updated. Share it with the employee securely.");
   }
 
+  async function rename() {
+    const next = window.prompt(`New username for ${name}:`, username);
+    if (!next || next.trim().toLowerCase() === username) return;
+    if (await patch({ username: next })) {
+      window.alert(`Username changed. ${isSelf ? "Use" : "They must now use"} the new username to sign in.`);
+    }
+  }
+
   async function remove() {
     if (window.confirm(`Remove ${name}? They won't be able to sign in. Their history is kept and you can reactivate them later.`)) {
       await patch({ active: false });
@@ -41,6 +49,7 @@ export function StaffActions({ id, name, active, isSelf }: { id: string; name: s
   return (
     <div className="mt-3 flex w-full flex-col items-center gap-2">
       <div className="flex flex-wrap justify-center gap-2">
+        {active && <button onClick={rename} disabled={busy} className="btn-secondary">Change username</button>}
         {active && <button onClick={resetPassword} disabled={busy} className="btn-secondary">Reset password</button>}
         {!isSelf && active && <button onClick={remove} disabled={busy} className="btn-secondary text-coral-700">Remove</button>}
         {!active && <button onClick={() => patch({ active: true })} disabled={busy} className="btn-secondary">Reactivate</button>}
