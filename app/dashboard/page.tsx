@@ -3,7 +3,7 @@ import { StatTile } from "@/components/StatTile";
 import { HandoverBoard } from "@/components/HandoverBoard";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { canManageHandover } from "@/lib/permissions";
+import { canManageHandover, isLimitedRole } from "@/lib/permissions";
 import { ResidentsIcon, StaffIcon, NoteIcon, CarePlanIcon, SparkleIcon, ShieldIcon, BuildingIcon, HandshakeIcon } from "@/components/icons";
 import { SITE_CHECK_TYPES } from "@/lib/siteChecks";
 
@@ -94,6 +94,7 @@ export default async function DashboardOverviewPage() {
         <p className="mt-1 text-sm text-ink-600">Today at a glance across Westcliff Lodge.</p>
       </div>
 
+      {!isLimitedRole(session!.user.role) && (
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           icon={<ResidentsIcon />}
@@ -125,6 +126,7 @@ export default async function DashboardOverviewPage() {
           attention={needsReview > 0}
         />
       </div>
+      )}
 
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
@@ -153,6 +155,7 @@ export default async function DashboardOverviewPage() {
           attention={siteIssues > 0}
           href="/dashboard/site"
         />
+        {!isLimitedRole(session!.user.role) && (
         <StatTile
           icon={<HandshakeIcon />}
           iconColor="bg-brand-50 text-brand-700"
@@ -162,6 +165,7 @@ export default async function DashboardOverviewPage() {
           attention={servicesDue > 0}
           href="/dashboard/services"
         />
+        )}
       </div>
 
       <HandoverBoard

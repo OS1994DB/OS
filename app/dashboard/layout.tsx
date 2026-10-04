@@ -3,7 +3,7 @@ import { ShieldIcon } from "@/components/icons";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canManageStaff } from "@/lib/permissions";
+import { canManageStaff, isLimitedRole } from "@/lib/permissions";
 import { SignOutButton } from "@/components/SignOutButton";
 import { SidebarNav } from "@/components/SidebarNav";
 
@@ -50,7 +50,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </div>
 
-        <SidebarNav showStaff={canManageStaff(role)} variant="sidebar" unreadMessages={unreadMessages} />
+        <SidebarNav showStaff={canManageStaff(role)} limited={isLimitedRole(role)} variant="sidebar" unreadMessages={unreadMessages} />
 
         <div className="mt-auto border-t border-ink-700/10 p-4">
           <div className="mb-3 flex items-center gap-2.5">
@@ -94,7 +94,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </div>
         <div className="border-t border-ink-700/10 px-3 py-2">
-          <SidebarNav showStaff={canManageStaff(role)} variant="topbar" unreadMessages={unreadMessages} />
+          <SidebarNav showStaff={canManageStaff(role)} limited={isLimitedRole(role)} variant="topbar" unreadMessages={unreadMessages} />
         </div>
       </header>
 

@@ -3,11 +3,11 @@ import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canManageStaff } from "@/lib/permissions";
+import { ALL_ROLES, canManageStaff } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { parseJsonBody } from "@/lib/request";
 
-const ROLES: readonly string[] = ["MANAGER", "SENIOR_CARER", "CARER"];
+const ROLES = ALL_ROLES;
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);

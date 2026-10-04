@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { canManageStaff } from "@/lib/permissions";
+import { canManageStaff, roleLabel } from "@/lib/permissions";
 import { AddStaffForm } from "@/components/AddStaffForm";
 import { StaffActions } from "@/components/StaffActions";
 
@@ -18,6 +18,8 @@ function initials(name: string) {
 const ROLE_STYLES: Record<string, string> = {
   MANAGER: "bg-coral-50 text-coral-700",
   SENIOR_CARER: "bg-amber-50 text-amber-700",
+  HOUSEKEEPING: "bg-brand-50 text-brand-700",
+  COOK: "bg-brand-50 text-brand-700",
   CARER: "bg-ink-700/10 text-ink-700",
 };
 
@@ -58,7 +60,7 @@ export default async function StaffPage() {
                 ROLE_STYLES[s.role] ?? ROLE_STYLES.CARER
               }`}
             >
-              {s.role.replace("_", " ")}
+              {roleLabel(s.role)}
             </span>
             <StaffActions id={s.id} active={s.active} isSelf={s.id === session!.user.id} />
           </li>

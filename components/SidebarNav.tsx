@@ -18,18 +18,24 @@ const NAV_ITEMS = [
   { href: "/dashboard/staff", label: "Staff", icon: StaffIcon, exact: false, managerOnly: true },
 ] as const;
 
+const LIMITED_HREFS = ["/dashboard", "/dashboard/site", "/dashboard/housekeeping", "/dashboard/ppp", "/dashboard/chat"];
+
 export function SidebarNav({
   showStaff,
+  limited = false,
   variant,
   unreadMessages = 0,
 }: {
   showStaff: boolean;
+  limited?: boolean;
   variant: "sidebar" | "topbar";
   unreadMessages?: number;
 }) {
   const pathname = usePathname();
 
-  const items = NAV_ITEMS.filter((item) => !("managerOnly" in item) || showStaff);
+  const items = NAV_ITEMS.filter(
+    (item) => (!("managerOnly" in item) || showStaff) && (!limited || LIMITED_HREFS.includes(item.href)),
+  );
 
   function isActive(href: string, exact: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);

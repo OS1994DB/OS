@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-const ROLES = ["CARER", "SENIOR_CARER", "MANAGER"];
+import { ALL_ROLES, roleLabel } from "@/lib/permissions";
+
+const ROLES = ALL_ROLES;
 
 export function AddStaffForm() {
   const router = useRouter();
@@ -66,7 +68,7 @@ export function AddStaffForm() {
       <select name="role" className="field">
         {ROLES.map((r) => (
           <option key={r} value={r}>
-            {r.replace("_", " ")}
+            {roleLabel(r)}
           </option>
         ))}
       </select>

@@ -1,4 +1,16 @@
-export type Role = "MANAGER" | "SENIOR_CARER" | "CARER";
+export type Role = "MANAGER" | "SENIOR_CARER" | "CARER" | "HOUSEKEEPING" | "COOK";
+
+export const ALL_ROLES: readonly string[] = ["CARER", "SENIOR_CARER", "MANAGER", "HOUSEKEEPING", "COOK"];
+
+// Non-care staff: no access to resident records, incidents, audits, messages
+// or the services register (enforced in middleware.ts as well as the UI).
+export function isLimitedRole(role: string | undefined | null) {
+  return role === "HOUSEKEEPING" || role === "COOK";
+}
+
+export function roleLabel(role: string) {
+  return role.replace("_", " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export function canEditCarePlans(role: string) {
   return role === "MANAGER" || role === "SENIOR_CARER";
