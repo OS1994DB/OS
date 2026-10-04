@@ -27,7 +27,7 @@ export default async function AdminStaffPage() {
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {staff.map((s) => (
-          <StaffCard key={s.id} name={s.name} email={s.email} role={s.role} active={s.active}>
+          <StaffCard key={s.id} name={s.name} username={s.username} role={s.role} active={s.active}>
             <StaffActions id={s.id} name={s.name} active={s.active} isSelf={s.id === session!.user.id} />
           </StaffCard>
         ))}

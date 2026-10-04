@@ -31,6 +31,27 @@ if (pooled) {
   writeFileSync(p, readFileSync(p, "utf8").replace(/provider = "sqlite"/, 'provider = "postgresql"'));
   console.log("Postgres detected: persistent mode");
   run("npx prisma generate", { DATABASE_URL: pooled });
+  // One-off upgrade for databases created before usernames existed: add the
+  // column and backfill it from the old email's local part so `db push` can
+  // then make it required. Harmless on a fresh or already-upgraded database.
+  const upgrade = `
+DO $$ BEGIN
+  IF to_regclass('"User"') IS NOT NULL AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'User' AND column_name = 'email') THEN
+    ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "username" TEXT;
+    ALTER TABLE "User" ALTER COLUMN "email" DROP NOT NULL;
+    UPDATE "User" u SET "username" = base.name || CASE WHEN base.rn > 1 THEN '-' || right(u."id", 4) ELSE '' END
+    FROM (
+      SELECT "id", lower(split_part("email", '@', 1)) AS name,
+             row_number() OVER (PARTITION BY lower(split_part("email", '@', 1)) ORDER BY "createdAt") AS rn
+      FROM "User" WHERE "email" IS NOT NULL
+    ) base
+    WHERE u."id" = base."id" AND u."username" IS NULL;
+    -- Create the constraints ourselves (same names Prisma uses) so db push has nothing destructive to confirm.
+    CREATE UNIQUE INDEX IF NOT EXISTS "User_username_key" ON "User"("username");
+    ALTER TABLE "User" ALTER COLUMN "username" SET NOT NULL;
+  END IF;
+END $$;`;
+  execSync("npx prisma db execute --stdin", { input: upgrade, stdio: ["pipe", "inherit", "inherit"], env: { ...process.env, DATABASE_URL: direct } });
   run("npx prisma db push --skip-generate", { DATABASE_URL: direct });
   run("npx tsx scripts/seed.ts", { DATABASE_URL: pooled });
   run("npx next build", { DATABASE_URL: pooled });

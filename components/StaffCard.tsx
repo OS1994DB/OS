@@ -12,8 +12,8 @@ const ROLE_STYLES: Record<string, string> = {
 
 // Square card matching the Residents grid.
 export function StaffCard({
-  name, email, role, active = true, children,
-}: { name: string; email: string; role: string; active?: boolean; children?: ReactNode }) {
+  name, username, role, active = true, children,
+}: { name: string; username: string; role: string; active?: boolean; children?: ReactNode }) {
   return (
     <div
       className={`flex flex-col items-center rounded-xl2 border border-ink-700/10 bg-cream-100 p-5 text-center shadow-card ${
@@ -27,7 +27,7 @@ export function StaffCard({
       <span className={`mt-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_STYLES[role] ?? ROLE_STYLES.CARER}`}>
         {roleLabel(role)}
       </span>
-      <p className="mt-1.5 w-full truncate text-xs text-ink-600/70">{email}</p>
+      <p className="mt-1.5 w-full truncate text-xs text-ink-600/70">@{username}</p>
       {!active && <p className="mt-1 text-xs text-ink-600">Removed — can&apos;t sign in</p>}
       {children}
     </div>

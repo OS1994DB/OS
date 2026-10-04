@@ -8,7 +8,7 @@ audit trail of who did what and when.
 ## Stack
 
 - **Next.js 14** (App Router) + TypeScript + Tailwind
-- **NextAuth** (credentials/email + password) with role-based access
+- **NextAuth** (credentials: username + password) with role-based access
 - **Prisma** (SQLite for local dev; swap to Postgres for real use)
 
 ## Data model
@@ -60,10 +60,10 @@ npx prisma migrate dev --name init
 ## 4. Create the first manager account
 
 ```bash
-SEED_MANAGER_EMAIL="you@example.com" SEED_MANAGER_PASSWORD="choose-a-real-password" npm run seed
+SEED_MANAGER_USERNAME="manager" SEED_MANAGER_PASSWORD="choose-a-real-password" npm run seed
 ```
 
-(Omit the env vars to get a default email and a random generated password
+(Omit the env vars to get the username `manager` and a random generated password
 printed to the console — fine for a quick local look, not for real use.)
 
 To also add one sample resident for testing the UI:
@@ -91,9 +91,7 @@ trail meaningful).
 - **Incidents**: any staff can report (falls, near misses, accidents…);
   managers review. Filterable list at `/dashboard/incidents`.
 - **Care plan print/PDF**: *Care plan → Print / save as PDF* (browser print).
-- **Self-service password reset**: `/forgot-password`. Set `RESEND_API_KEY`
-  and `MAIL_FROM` to send real email; otherwise the link is printed to the
-  server console. Tokens are hashed, single-use and expire after 1 hour.
+- **Passwords**: staff sign in with a username. There is no email-based reset; a manager resets passwords from Admin → Staff accounts.
 - **Deactivation takes effect immediately** (account re-checked on every
   session read).
 - **Postgres**: `DATABASE_URL="postgresql://…" npm run db:use-postgres`
@@ -136,5 +134,5 @@ For review only: `npm run vercel-build` seeds a SQLite file at build time and
 the app copies it to `/tmp` at runtime (`DEMO_DB_COPY=true`). Data resets on
 cold start and isn't shared between instances. Required env vars:
 `DATABASE_URL=file:./demo.db`, `DEMO_DB_COPY=true`, `NEXTAUTH_SECRET`,
-`SEED_MANAGER_EMAIL`, `SEED_MANAGER_PASSWORD`, `SEED_SAMPLE_DATA=true`.
+`SEED_MANAGER_USERNAME`, `SEED_MANAGER_PASSWORD`, `SEED_SAMPLE_DATA=true`.
 Use Postgres (`npm run db:use-postgres`) for anything real.

@@ -1,13 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +17,7 @@ export default function LoginPage() {
     setLoading(true);
 
     const result = await signIn("credentials", {
-      email,
+      username,
       password,
       redirect: false,
     });
@@ -26,7 +25,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Incorrect email or password.");
+      setError("Incorrect username or password.");
       return;
     }
 
@@ -60,12 +59,16 @@ export default function LoginPage() {
 
         <p className="mb-5 text-sm text-ink-600">Sign in with your staff account to continue.</p>
 
-        <label className="mb-1.5 block text-sm font-medium text-ink-700">Email</label>
+        <label className="mb-1.5 block text-sm font-medium text-ink-700">Username</label>
         <input
-          type="email"
+          type="text"
           required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           className="field mb-4"
         />
 
@@ -85,9 +88,6 @@ export default function LoginPage() {
         <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
           {loading ? "Signing in..." : "Sign in"}
         </button>
-        <Link href="/forgot-password" className="mt-4 block text-center text-sm text-brand-700 hover:underline">
-          Forgot password?
-        </Link>
       </form>
     </main>
   );

@@ -5,19 +5,25 @@ import crypto from "node:crypto";
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = process.env.SEED_MANAGER_EMAIL ?? "manager@example.com";
+  // Username for the first manager. Falls back to the local part of the old
+// SEED_MANAGER_EMAIL setting so existing environments keep working.
+const username = (
+  process.env.SEED_MANAGER_USERNAME ??
+  process.env.SEED_MANAGER_EMAIL?.split("@")[0] ??
+  "manager"
+).toLowerCase();
   const password = process.env.SEED_MANAGER_PASSWORD ?? crypto.randomBytes(9).toString("base64url");
 
-  const existing = await prisma.user.findUnique({ where: { email } });
+  const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) {
-    console.log(`Manager account already exists: ${email}`);
+    console.log(`Manager account already exists: ${username}`);
   } else {
     const passwordHash = await bcrypt.hash(password, 12);
     await prisma.user.create({
-      data: { email, name: "Manager", role: "MANAGER", passwordHash },
+      data: { username, name: "Manager", role: "MANAGER", passwordHash },
     });
     console.log("Created manager account:");
-    console.log(`  email:    ${email}`);
+    console.log(`  username: ${username}`);
     console.log(`  password: ${password}`);
     console.log("Sign in and change this password's owner via the Staff page as needed.");
   }
@@ -25,7 +31,7 @@ async function main() {
   if (process.env.SEED_SAMPLE_DATA === "true") {
     const count = await prisma.resident.count();
     if (count === 0) {
-      const manager = await prisma.user.findUniqueOrThrow({ where: { email } });
+      const manager = await prisma.user.findUniqueOrThrow({ where: { username } });
       const resident = await prisma.resident.create({
         data: {
           name: "Sample Resident",

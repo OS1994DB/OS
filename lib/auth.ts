@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
+import { normalizeUsername } from "@/lib/username";
 
 export const authOptions: AuthOptions = {
   session: { strategy: "jwt" },
@@ -11,14 +12,15 @@ export const authOptions: AuthOptions = {
     CredentialsProvider({
       name: "Email and password",
       credentials: {
-        email: { label: "Email", type: "email" },
+        username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        const username = normalizeUsername(credentials?.username);
+        if (!username || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+          where: { username },
         });
         if (!user || !user.active) return null;
 
@@ -32,7 +34,7 @@ export const authOptions: AuthOptions = {
           entityId: user.id,
         });
 
-        return { id: user.id, email: user.email, name: user.name, role: user.role };
+        return { id: user.id, name: user.name, role: user.role };
       },
     }),
   ],

@@ -24,7 +24,7 @@ export function AddStaffForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: form.get("name"),
-        email: form.get("email"),
+        username: form.get("username"),
         password: form.get("password"),
         role: form.get("role"),
       }),
@@ -56,7 +56,18 @@ export function AddStaffForm() {
       className="grid grid-cols-1 gap-3 rounded-xl2 border border-ink-700/10 bg-cream-100 p-5 shadow-card sm:grid-cols-2"
     >
       <input name="name" required placeholder="Full name" className="field" />
-      <input name="email" required type="email" placeholder="Email" className="field" />
+      <input
+        name="username"
+        required
+        minLength={3}
+        maxLength={30}
+        pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,29}"
+        title="3–30 characters: letters, numbers, dots, dashes or underscores"
+        autoCapitalize="none"
+        autoComplete="off"
+        placeholder="Username (e.g. jsmith)"
+        className="field"
+      />
       <input
         name="password"
         required

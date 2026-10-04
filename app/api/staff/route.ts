@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { ALL_ROLES, canManageStaff } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 import { parseJsonBody } from "@/lib/request";
+import { USERNAME_RE, normalizeUsername } from "@/lib/username";
 
 const ROLES = ALL_ROLES;
 
@@ -18,27 +19,34 @@ export async function POST(req: Request) {
 
   const parsed = await parseJsonBody(req);
   if (!parsed) return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  const { name, email, password, role } = parsed as {
+  const { name, username: rawUsername, password, role } = parsed as {
     name?: string;
-    email?: string;
+    username?: string;
     password?: string;
     role?: string;
   };
-  if (!name || !email || !password || !role || !ROLES.includes(role)) {
+  const username = normalizeUsername(rawUsername);
+  if (!name || !username || !password || !role || !ROLES.includes(role)) {
     return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
   }
   if (password.length < 8) {
     return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
   }
 
-  const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  if (!USERNAME_RE.test(username)) {
+    return NextResponse.json(
+      { error: "Username must be 3–30 characters: lowercase letters, numbers, dots, dashes or underscores" },
+      { status: 400 },
+    );
+  }
+  const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) {
-    return NextResponse.json({ error: "A user with that email already exists" }, { status: 409 });
+    return NextResponse.json({ error: "That username is already taken" }, { status: 409 });
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { name, email: email.toLowerCase(), passwordHash, role },
+    data: { name, username, passwordHash, role },
   });
 
   await logAudit({
@@ -49,5 +57,5 @@ export async function POST(req: Request) {
     metadata: { role },
   });
 
-  return NextResponse.json({ id: user.id, name: user.name, email: user.email, role: user.role }, { status: 201 });
+  return NextResponse.json({ id: user.id, name: user.name, username: user.username, role: user.role }, { status: 201 });
 }
