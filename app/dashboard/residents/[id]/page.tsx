@@ -42,7 +42,7 @@ export default async function ResidentPage({ params }: { params: Promise<{ id: s
   const resident = await prisma.resident.findUnique({ where: { id } });
   if (!resident) notFound();
 
-  const [carePlanCategories, notesCount, assessmentsCount, riskAssessmentsCount, details] = await Promise.all([
+  const [carePlanCategories, notesCount, assessmentsCount, riskAssessmentsCount, details, incidentsCount] = await Promise.all([
     prisma.carePlanVersion.findMany({ where: { residentId: id }, distinct: ["category"], select: { category: true } }),
     prisma.note.count({ where: { residentId: id } }),
     prisma.assessment.count({ where: { residentId: id, kind: "GENERAL" } }),
@@ -52,6 +52,7 @@ export default async function ResidentPage({ params }: { params: Promise<{ id: s
       orderBy: { createdAt: "desc" },
       include: { createdBy: true },
     }),
+    prisma.incident.count({ where: { residentId: id } }),
   ]);
 
   const canEditProfile = canManageResidents(role);
@@ -128,7 +129,7 @@ export default async function ResidentPage({ params }: { params: Promise<{ id: s
         <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Near misses" />
         <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Accidents" />
         <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Falls" />
-        <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Report incident" href={`/dashboard/incidents/new?residentId=${resident.id}`} />
+        <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Incidents" count={incidentsCount} href={`/dashboard/residents/${resident.id}/incidents`} />
       </CategoryTileRow>
 
       <CategoryTileRow color="pink" title="Medical" icon={<MedicalCrossIcon className="h-4 w-4" />}>

@@ -19,7 +19,7 @@ export default async function AdminStaffPage() {
     <div>
       <Link href="/dashboard/admin" className="mb-3 inline-block text-sm font-medium text-ink-600 hover:text-brand-600">← Admin</Link>
       <div className="mb-4">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Staff accounts</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Employee accounts</h1>
         <p className="mt-1 text-sm text-ink-600">{activeCount} active · {staff.length - activeCount} removed</p>
       </div>
       <div className="mb-6">

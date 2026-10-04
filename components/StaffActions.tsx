@@ -29,7 +29,7 @@ export function StaffActions({ id, name, active, isSelf }: { id: string; name: s
   async function resetPassword() {
     const password = window.prompt(`New temporary password for ${name} (min 8 characters):`);
     if (!password) return;
-    if (await patch({ password })) window.alert("Password updated. Share it with the staff member securely.");
+    if (await patch({ password })) window.alert("Password updated. Share it with the employee securely.");
   }
 
   async function remove() {

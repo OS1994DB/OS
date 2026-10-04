@@ -15,10 +15,10 @@ export default async function StaffPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Staff</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Employees</h1>
         <p className="mt-1 text-sm text-ink-600">
-          {staff.length} active staff · to add or remove accounts go to{" "}
-          <Link href="/dashboard/admin/staff" className="text-brand-700 hover:underline">Admin → Staff accounts</Link>
+          {staff.length} active employees · to add or remove accounts go to{" "}
+          <Link href="/dashboard/admin/staff" className="text-brand-700 hover:underline">Admin → Employee accounts</Link>
         </p>
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageStaff } from "@/lib/permissions";
-import { StaffIcon, AssessmentIcon, NoteIcon } from "@/components/icons";
+import { StaffIcon, AssessmentIcon, NoteIcon, AlertTriangleIcon } from "@/components/icons";
 
 function AdminTile({ href, icon, title, sub }: { href: string; icon: ReactNode; title: string; sub: string }) {
   return (
@@ -40,14 +40,14 @@ export default async function AdminPage() {
     <div>
       <div className="mb-6">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Admin</h1>
-        <p className="mt-1 text-sm text-ink-600">Managers only · {openIncidents} open incident{openIncidents === 1 ? "" : "s"}</p>
+        <p className="mt-1 text-sm text-ink-600">Managers and admins only</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <AdminTile
           href="/dashboard/admin/staff"
           icon={<StaffIcon />}
-          title="Staff accounts"
+          title="Employee accounts"
           sub={`${activeStaff} active${removedStaff ? ` · ${removedStaff} removed` : ""}`}
         />
         <AdminTile
@@ -55,6 +55,12 @@ export default async function AdminPage() {
           icon={<AssessmentIcon />}
           title="Templates"
           sub={`${activeTemplates} active of ${templates}`}
+        />
+        <AdminTile
+          href="/dashboard/incidents"
+          icon={<AlertTriangleIcon />}
+          title="Incidents"
+          sub={`${openIncidents} open · all residents`}
         />
         <AdminTile
           href="/dashboard/admin/audit-log"

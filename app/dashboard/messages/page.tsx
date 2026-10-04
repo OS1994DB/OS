@@ -19,7 +19,7 @@ export default async function MessagesPage() {
     <div>
       <div className="mb-6">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Messages</h1>
-        <p className="mt-1 text-sm text-ink-600">Updates for all staff — care plan changes and other notices.</p>
+        <p className="mt-1 text-sm text-ink-600">Updates for all employees — care plan changes and other notices.</p>
       </div>
 
       {messages.length === 0 ? (

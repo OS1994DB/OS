@@ -57,7 +57,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="mb-5 text-sm text-ink-600">Sign in with your staff account to continue.</p>
+        <p className="mb-5 text-sm text-ink-600">Sign in with your account to continue.</p>
 
         <label className="mb-1.5 block text-sm font-medium text-ink-700">Username</label>
         <input

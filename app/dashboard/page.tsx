@@ -106,7 +106,7 @@ export default async function DashboardOverviewPage() {
         <StatTile
           icon={<StaffIcon />}
           iconColor="bg-brand-50 text-brand-700"
-          label="Staff"
+          label="Employees"
           value={staffCount}
           sublabel={staffSummary || undefined}
           href="/dashboard/staff"

@@ -23,13 +23,11 @@ export async function POST(req: Request) {
       typeof description !== "string" || !description.trim()) {
     return NextResponse.json({ error: "Missing or invalid fields" }, { status: 400 });
   }
-  let resId: string | null = null;
-  if (typeof residentId === "string" && residentId) {
-    if (!(await prisma.resident.findUnique({ where: { id: residentId }, select: { id: true } }))) {
-      return NextResponse.json({ error: "Resident not found" }, { status: 400 });
-    }
-    resId = residentId;
+  // Incidents are personal to a resident.
+  if (typeof residentId !== "string" || !(await prisma.resident.findUnique({ where: { id: residentId }, select: { id: true } }))) {
+    return NextResponse.json({ error: "Choose a resident" }, { status: 400 });
   }
+  const resId = residentId;
 
   const incident = await prisma.incident.create({
     data: {

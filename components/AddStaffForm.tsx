@@ -34,7 +34,7 @@ export function AddStaffForm() {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Could not create staff account.");
+      setError(data.error ?? "Could not create employee account.");
       return;
     }
 
@@ -45,7 +45,7 @@ export function AddStaffForm() {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="btn-primary">
-        + Add staff account
+        + Add employee account
       </button>
     );
   }

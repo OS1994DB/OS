@@ -11,7 +11,7 @@ function nowLocal() {
   return d.toISOString().slice(0, 16);
 }
 
-export function IncidentForm({ residents, defaultResidentId }: { residents: { id: string; name: string }[]; defaultResidentId?: string }) {
+export function IncidentForm({ residentId }: { residentId: string }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -25,7 +25,7 @@ export function IncidentForm({ residents, defaultResidentId }: { residents: { id
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        residentId: f.get("residentId"), type: f.get("type"), severity: f.get("severity"),
+        residentId, type: f.get("type"), severity: f.get("severity"),
         occurredAt: new Date(String(f.get("occurredAt"))).toISOString(),
         location: f.get("location"), description: f.get("description"), actionTaken: f.get("actionTaken"),
       }),
@@ -35,16 +35,12 @@ export function IncidentForm({ residents, defaultResidentId }: { residents: { id
       setError((await res.json().catch(() => ({}))).error ?? "Could not save report.");
       return;
     }
-    router.push("/dashboard/incidents");
+    router.push(`/dashboard/residents/${residentId}/incidents`);
     router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="grid grid-cols-1 gap-3 rounded-xl2 border border-ink-700/10 bg-cream-100 p-5 shadow-card sm:grid-cols-2">
-      <select name="residentId" defaultValue={defaultResidentId ?? ""} className="field">
-        <option value="">No resident involved</option>
-        {residents.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-      </select>
       <input name="occurredAt" type="datetime-local" required defaultValue={nowLocal()} className="field" />
       <select name="type" className="field">
         {TYPES.map((t) => <option key={t} value={t}>{t.replace("_", " ").toLowerCase()}</option>)}

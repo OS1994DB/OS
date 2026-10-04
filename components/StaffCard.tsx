@@ -8,6 +8,7 @@ const ROLE_STYLES: Record<string, string> = {
   CARER: "bg-ink-700/10 text-ink-700",
   HOUSEKEEPING: "bg-brand-50 text-brand-700",
   COOK: "bg-brand-50 text-brand-700",
+  ADMIN: "bg-coral-50 text-coral-700",
 };
 
 // Square card matching the Residents grid.
