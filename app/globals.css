@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-cream-50 text-ink-800 antialiased font-sans;
+  font-feature-settings: "cv11", "ss01";
+}
+
+h1, h2, h3, .font-display {
+  font-family: "Quicksand", ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  @apply bg-brand-600/50 text-ink-800;
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-xl2 border border-white/10 bg-cream-100 px-3 py-2 text-sm text-ink-800 placeholder-ink-600/60 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  }
+  .btn-primary {
+    @apply rounded-xl2 bg-brand-500 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-secondary {
+    @apply rounded-xl2 border border-white/10 bg-cream-100 px-3.5 py-2 text-sm font-semibold text-ink-800 transition-colors hover:bg-white/5;
+  }
+}

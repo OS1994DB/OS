@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite has no native enum type, so Role/NoteCategory are validated in
+// application code (lib/permissions.ts, and the ROLES/CATEGORIES arrays in
+// the API routes) rather than at the schema level. Values used:
+//   Role: "MANAGER" | "SENIOR_CARER" | "CARER"
+//   NoteCategory: "GENERAL" | "CARE" | "HEALTH" | "INCIDENT" | "RISK"
+//   Assessment.kind: "GENERAL" | "RISK"
+//   Assessment.riskLevel (only set when kind="RISK"): "LOW" | "MEDIUM" | "HIGH"
+//   ResidentDetail.section: "INFO" | "ALLERGY" | "MEDICATION" | "GP" | "CONDITION" | "ABOUT_ME"
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  passwordHash       String
+  name               String
+  role               String    @default("CARER")
+  active             Boolean   @default(true)
+  lastMessagesSeenAt DateTime?
+  createdAt          DateTime  @default(now())
+
+  carePlans       CarePlanVersion[]
+  carePlanReviews CarePlanReview[]
+  consentEntries  ConsentEntry[]
+  notes           Note[]
+  assessments     Assessment[]
+  residentDetails ResidentDetail[]
+  staffMessages   StaffMessage[]
+  auditLogs       AuditLog[]
+}
+
+model Resident {
+  id              String   @id @default(cuid())
+  name            String
+  dateOfBirth     DateTime
+  roomNumber      String
+  keyContactName  String
+  keyContactPhone String
+  admittedAt      DateTime @default(now())
+  nhsNumber       String?
+  customReference String?
+  createdAt       DateTime @default(now())
+
+  carePlans       CarePlanVersion[]
+  carePlanReviews CarePlanReview[]
+  consentEntries  ConsentEntry[]
+  notes           Note[]
+  assessments     Assessment[]
+  residentDetails ResidentDetail[]
+  staffMessages   StaffMessage[]
+}
+
+// Care plans are append-only and split into fixed categories (Mobility,
+// Skin Care, Medication, ...) — a new edit creates a new version row for
+// that category rather than mutating an old one, so the full history
+// survives for audits/CQC. See lib/carePlanCategories.ts for the category
+// codes.
+model CarePlanVersion {
+  id                  String   @id @default(cuid())
+  residentId          String
+  resident            Resident @relation(fields: [residentId], references: [id])
+  category            String
+  version             Int
+  identifiedRisk      String   @default("")
+  residentPerspective String   @default("")
+  careSupport         String   @default("")
+  careDirective       String   @default("")
+  reviewSummary       String   @default("")
+  createdById         String
+  createdBy           User     @relation(fields: [createdById], references: [id])
+  createdAt           DateTime @default(now())
+
+  @@unique([residentId, category, version])
+  @@index([residentId, category])
+}
+
+// Monthly review entries for a care plan category — separate from the
+// versioned plan content itself, so reviewing doesn't require rewriting
+// the plan. The UI treats a category "due" once a month has passed since
+// its last review (or since the plan's own last version, if never reviewed).
+model CarePlanReview {
+  id           String   @id @default(cuid())
+  residentId   String
+  resident     Resident @relation(fields: [residentId], references: [id])
+  category     String
+  notes        String
+  reviewedById String
+  reviewedBy   User     @relation(fields: [reviewedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([residentId, category])
+}
+
+// Consent log for a care plan category — whether the resident was asked
+// directly ("Sought") or, where they lack capacity, the decision was made
+// in their "Best Interest" (Mental Capacity Act). Append-only, like the
+// other care plan records; reviewDate is informational only here — the
+// actual review event is still logged via CarePlanReview above.
+model ConsentEntry {
+  id              String    @id @default(cuid())
+  residentId      String
+  resident        Resident  @relation(fields: [residentId], references: [id])
+  category        String
+  type            String // "BEST_INTEREST" | "SOUGHT"
+  dateLogged      DateTime
+  reviewDate      DateTime?
+  supportDecision String
+  createdById     String
+  createdBy       User      @relation(fields: [createdById], references: [id])
+  createdAt       DateTime  @default(now())
+
+  @@index([residentId, category])
+}
+
+// Broadcast to all staff when a care plan actually changes (not on every
+// save — a no-op resave with identical content never reaches here). Read
+// state is tracked per-user via User.lastMessagesSeenAt rather than a
+// join table, since messages are a shared broadcast feed, not per-user mail.
+model StaffMessage {
+  id          String    @id @default(cuid())
+  body        String
+  residentId  String?
+  resident    Resident? @relation(fields: [residentId], references: [id])
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+// Notes are immutable once saved — no update/delete route exists on purpose.
+model Note {
+  id         String   @id @default(cuid())
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  category   String   @default("GENERAL")
+  body       String
+  createdAt  DateTime @default(now())
+
+  @@index([residentId, createdAt])
+}
+
+// Assessments are append-only snapshots, same as care plan versions — a
+// reassessment adds a new row rather than editing the old finding.
+model Assessment {
+  id            String    @id @default(cuid())
+  residentId    String
+  resident      Resident  @relation(fields: [residentId], references: [id])
+  kind          String // "GENERAL" | "RISK"
+  title         String
+  riskLevel     String?
+  findings      String
+  reviewDate    DateTime?
+  completedById String
+  completedBy   User      @relation(fields: [completedById], references: [id])
+  createdAt     DateTime  @default(now())
+
+  @@index([residentId, kind])
+}
+
+// Quick-reference resident info (allergies, GP, "about me" facts, etc.) —
+// a mutable list staff keep current, unlike the append-only care plan/
+// assessment history above. Deletes are real deletes, logged to AuditLog.
+model ResidentDetail {
+  id          String   @id @default(cuid())
+  residentId  String
+  resident    Resident @relation(fields: [residentId], references: [id])
+  section     String
+  content     String
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([residentId, section])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
