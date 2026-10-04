@@ -326,3 +326,12 @@ export function ShieldIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
     </svg>
   );
 }
+
+export function HandshakeIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="M3 11l4-4 4 2 3-2 4 3 3 3" />
+      <path d="M3 11l5 6 2-1 2 2 2-1 2 1 4-4" />
+    </svg>
+  );
+}

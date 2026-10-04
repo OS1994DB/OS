@@ -44,6 +44,7 @@ model User {
   chatMessages        ChatMessage[]
   HousekeepingLog     HousekeepingLog[]
   pppFiles            PppFile[]
+  thirdParties        ThirdParty[]
 }
 
 model Resident {
@@ -366,4 +367,24 @@ model PppFile {
   createdAt    DateTime   @default(now())
 
   @@index([folderId])
+}
+
+// Third-party services and suppliers (GP surgery, pharmacy, district nurses,
+// contractors...). Kept as a simple contact + contract-renewal register.
+//   category: "GP" | "PHARMACY" | "NURSING" | "THERAPY" | "DENTAL_OPTICAL" | "SOCIAL_CARE" | "CONTRACTOR" | "UTILITIES" | "CATERING_LAUNDRY" | "OTHER"
+model ThirdParty {
+  id          String    @id @default(cuid())
+  name        String
+  category    String
+  contactName String    @default("")
+  phone       String    @default("")
+  email       String    @default("")
+  notes       String    @default("")
+  renewalDate DateTime?
+  active      Boolean   @default(true)
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([category, active])
 }
