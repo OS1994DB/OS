@@ -40,6 +40,8 @@ model User {
   incidentsReported   Incident[]                 @relation("IncidentReporter")
   incidentsReviewed   Incident[]                 @relation("IncidentReviewer")
   passwordResetTokens PasswordResetToken[]
+  siteChecks          SiteCheck[]
+  chatMessages        ChatMessage[]
 }
 
 model Resident {
@@ -288,4 +290,32 @@ model Incident {
 
   @@index([residentId, occurredAt])
   @@index([status, occurredAt])
+}
+
+// Building/facilities safety check log. Append-only.
+//   type: "FIRE_ALARM" | "FIRE_DOORS" | "EMERGENCY_LIGHTING" | "WATER_TEMPERATURE" | "FIRE_EXTINGUISHERS" | "HOIST_EQUIPMENT" | "MAINTENANCE" | "OTHER"
+//   result: "PASS" | "FAIL"
+model SiteCheck {
+  id          String   @id @default(cuid())
+  type        String
+  area        String   @default("")
+  result      String
+  notes       String   @default("")
+  checkedById String
+  checkedBy   User     @relation(fields: [checkedById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([createdAt])
+}
+
+// Staff-wide chat channel (one shared room). Messages are immutable.
+model ChatMessage {
+  id        String   @id @default(cuid())
+  body      String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }

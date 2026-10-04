@@ -299,3 +299,12 @@ export function BoxIcon({ className = "h-5 w-5" }: IconProps) {
     </svg>
   );
 }
+
+export function BuildingIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="M4 21V5l8-2 8 2v16" />
+      <path d="M9 21v-4h6v4M8 9h2M14 9h2M8 13h2M14 13h2" />
+    </svg>
+  );
+}
