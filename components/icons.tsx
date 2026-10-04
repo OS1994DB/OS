@@ -317,3 +317,12 @@ export function SparkleIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
     </svg>
   );
 }
+
+export function ShieldIcon({ className = "h-[18px] w-[18px]" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className}>
+      <path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9-4.8-1.3-8-4.5-8-9V6z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
