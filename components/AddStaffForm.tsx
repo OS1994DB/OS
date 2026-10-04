@@ -53,7 +53,7 @@ export function AddStaffForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-6 grid grid-cols-1 gap-3 rounded-xl2 border border-ink-700/10 bg-cream-100 p-5 shadow-card sm:grid-cols-2"
+      className="grid grid-cols-1 gap-3 rounded-xl2 border border-ink-700/10 bg-cream-100 p-5 shadow-card sm:grid-cols-2"
     >
       <input name="name" required placeholder="Full name" className="field" />
       <input name="email" required type="email" placeholder="Email" className="field" />

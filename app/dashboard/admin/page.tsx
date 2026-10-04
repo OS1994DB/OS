@@ -1,64 +1,68 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageStaff } from "@/lib/permissions";
+import { StaffIcon, AssessmentIcon, NoteIcon } from "@/components/icons";
+
+function AdminTile({ href, icon, title, sub }: { href: string; icon: ReactNode; title: string; sub: string }) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col items-center rounded-xl2 border border-ink-700/10 bg-cream-100 p-5 text-center shadow-card transition-all hover:-translate-y-0.5 hover:shadow-soft"
+    >
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-700 [&>svg]:h-7 [&>svg]:w-7">
+        {icon}
+      </div>
+      <p className="mt-3 font-display font-semibold text-ink-800">{title}</p>
+      <p className="mt-0.5 text-sm text-ink-600">{sub}</p>
+    </Link>
+  );
+}
 
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);
   if (!canManageStaff(session!.user.role)) redirect("/dashboard");
 
-  const [residents, activeStaff, inactiveStaff, openIncidents, notes, audit] = await Promise.all([
-    prisma.resident.count(),
+  const dayAgo = new Date(Date.now() - 86_400_000);
+  const [activeStaff, removedStaff, templates, activeTemplates, audit24h, openIncidents] = await Promise.all([
     prisma.user.count({ where: { active: true } }),
     prisma.user.count({ where: { active: false } }),
+    prisma.checklistTemplate.count(),
+    prisma.checklistTemplate.count({ where: { active: true } }),
+    prisma.auditLog.count({ where: { createdAt: { gte: dayAgo } } }),
     prisma.incident.count({ where: { status: "OPEN" } }),
-    prisma.note.count(),
-    prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 100, include: { user: true } }),
   ]);
-
-  const stats = [
-    ["Residents", residents],
-    ["Active staff", activeStaff],
-    ["Inactive staff", inactiveStaff],
-    ["Open incidents", openIncidents],
-    ["Daily notes", notes],
-  ] as const;
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Admin</h1>
-          <p className="mt-1 text-sm text-ink-600">Managers only</p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/admin/templates" className="btn-primary">Templates</Link>
-          <Link href="/dashboard/staff" className="btn-secondary">Staff accounts</Link>
-        </div>
+      <div className="mb-6">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-800">Admin</h1>
+        <p className="mt-1 text-sm text-ink-600">Managers only · {openIncidents} open incident{openIncidents === 1 ? "" : "s"}</p>
       </div>
 
-      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {stats.map(([label, n]) => (
-          <div key={label} className="rounded-xl2 border border-ink-700/10 bg-cream-100 p-4 shadow-card">
-            <p className="text-2xl font-semibold text-ink-800">{n}</p>
-            <p className="text-xs text-ink-600">{label}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <AdminTile
+          href="/dashboard/admin/staff"
+          icon={<StaffIcon />}
+          title="Staff accounts"
+          sub={`${activeStaff} active${removedStaff ? ` · ${removedStaff} removed` : ""}`}
+        />
+        <AdminTile
+          href="/dashboard/admin/templates"
+          icon={<AssessmentIcon />}
+          title="Templates"
+          sub={`${activeTemplates} active of ${templates}`}
+        />
+        <AdminTile
+          href="/dashboard/admin/audit-log"
+          icon={<NoteIcon />}
+          title="Audit log"
+          sub={`${audit24h} actions in 24h`}
+        />
       </div>
-
-      <h2 className="mb-2 font-display text-base font-semibold text-ink-800">Audit log (latest 100)</h2>
-      <ul className="overflow-hidden rounded-xl2 border border-ink-700/10 bg-cream-100 shadow-card">
-        {audit.map((a) => (
-          <li key={a.id} className="flex flex-wrap gap-x-3 border-b border-ink-700/10 px-4 py-2 text-sm last:border-b-0">
-            <span className="text-xs text-ink-600">{a.createdAt.toLocaleString("en-GB")}</span>
-            <span className="font-medium text-ink-800">{a.user.name}</span>
-            <span className="text-ink-700">{a.action}</span>
-            <span className="text-xs text-ink-600">{a.entityType}</span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
