@@ -41,10 +41,24 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as { role: string }).role;
+        return token;
       }
+      // Re-check the account on every session read so deactivation and role
+      // changes take effect immediately rather than when the JWT expires.
+      const current = token.id
+        ? await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { active: true, role: true },
+          })
+        : null;
+      if (!current || !current.active) return { revoked: true } as typeof token;
+      token.role = current.role;
       return token;
     },
     async session({ session, token }) {
+      // A revoked token yields an empty session, which getServerSession
+      // reports as null.
+      if (token.revoked) return {} as typeof session;
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;

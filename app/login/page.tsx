@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -84,6 +85,9 @@ export default function LoginPage() {
         <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
           {loading ? "Signing in..." : "Sign in"}
         </button>
+        <Link href="/forgot-password" className="mt-4 block text-center text-sm text-brand-700 hover:underline">
+          Forgot password?
+        </Link>
       </form>
     </main>
   );

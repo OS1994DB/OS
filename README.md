@@ -83,6 +83,22 @@ the **Staff** page create real accounts for each member of staff (one
 account per person — don't share logins, since that's what makes the audit
 trail meaningful).
 
+## Features added since v0.1
+
+- **Medication (MAR)** per resident: manager/senior carers chart medication;
+  all staff record doses (given/refused/omitted/not available — a note is
+  required unless given). Append-only history; stopping needs a reason.
+- **Incidents**: any staff can report (falls, near misses, accidents…);
+  managers review. Filterable list at `/dashboard/incidents`.
+- **Care plan print/PDF**: *Care plan → Print / save as PDF* (browser print).
+- **Self-service password reset**: `/forgot-password`. Set `RESEND_API_KEY`
+  and `MAIL_FROM` to send real email; otherwise the link is printed to the
+  server console. Tokens are hashed, single-use and expire after 1 hour.
+- **Deactivation takes effect immediately** (account re-checked on every
+  session read).
+- **Postgres**: `DATABASE_URL="postgresql://…" npm run db:use-postgres`
+  switches the provider and creates the schema (`prisma db push`).
+
 ## Before this touches real resident data
 
 This handles special-category personal data (health/care records for
@@ -103,8 +119,6 @@ named individuals), so a few things matter beyond "does it run":
   registration, and a basic record of processing for it.
 - **Password reset / deactivation**: managers can reset a password or
   deactivate/reactivate an account from the Staff page (both audit-logged).
-  Self-service reset by email is not built. Note sessions are JWTs, so a
-  deactivated user's existing session stays valid until it expires.
 
 ## Deliberately not built yet (add only if actually needed)
 
@@ -112,7 +126,6 @@ named individuals), so a few things matter beyond "does it run":
 - A native mobile app — the web app is responsive and works fine on phones
   as-is for point-of-care note-taking
 - AI-assisted care plan writing
-- Self-service password reset / email
 
 Keep it this small until the home actually asks for more — a 20-resident
 home doesn't need the surface area of a multi-tenant product.

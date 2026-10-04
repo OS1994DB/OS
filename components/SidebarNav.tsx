@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DashboardIcon, ResidentsIcon, StaffIcon, SpeechBubbleIcon } from "@/components/icons";
+import { DashboardIcon, ResidentsIcon, StaffIcon, SpeechBubbleIcon, AlertTriangleIcon } from "@/components/icons";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: DashboardIcon, exact: true },
   { href: "/dashboard/residents", label: "Residents", icon: ResidentsIcon, exact: false },
+  { href: "/dashboard/incidents", label: "Incidents", icon: AlertTriangleIcon, exact: false },
   { href: "/dashboard/messages", label: "Messages", icon: SpeechBubbleIcon, exact: false },
   { href: "/dashboard/staff", label: "Staff", icon: StaffIcon, exact: false, managerOnly: true },
 ] as const;

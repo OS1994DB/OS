@@ -15,3 +15,11 @@ export function canAddAssessments(role: string) {
 export function canManageStaff(role: string) {
   return role === "MANAGER";
 }
+
+export function canManageMedications(role: string) {
+  return role === "MANAGER" || role === "SENIOR_CARER";
+}
+
+export function canReviewIncidents(role: string) {
+  return role === "MANAGER";
+}

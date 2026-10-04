@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ResidentSubpageHeader } from "@/components/ResidentSubpageHeader";
@@ -26,6 +27,9 @@ export default async function CarePlanPage({ params }: { params: Promise<{ id: s
   return (
     <div>
       <ResidentSubpageHeader residentId={resident.id} residentName={resident.name} title="Care plan" />
+      <Link href={`/dashboard/residents/${id}/care-plan/print`} className="btn-secondary mb-4 inline-block">
+        Print / save as PDF
+      </Link>
       <div className="flex flex-wrap gap-2.5">
         {CARE_PLAN_TABS.map((tab) => (
           <CarePlanCategoryTile

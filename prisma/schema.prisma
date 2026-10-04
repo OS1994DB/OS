@@ -26,14 +26,19 @@ model User {
   lastMessagesSeenAt DateTime?
   createdAt          DateTime  @default(now())
 
-  carePlans       CarePlanVersion[]
-  carePlanReviews CarePlanReview[]
-  consentEntries  ConsentEntry[]
-  notes           Note[]
-  assessments     Assessment[]
-  residentDetails ResidentDetail[]
-  staffMessages   StaffMessage[]
-  auditLogs       AuditLog[]
+  carePlans           CarePlanVersion[]
+  carePlanReviews     CarePlanReview[]
+  consentEntries      ConsentEntry[]
+  notes               Note[]
+  assessments         Assessment[]
+  residentDetails     ResidentDetail[]
+  staffMessages       StaffMessage[]
+  auditLogs           AuditLog[]
+  medications         Medication[]
+  medicationAdmins    MedicationAdministration[]
+  incidentsReported   Incident[]                 @relation("IncidentReporter")
+  incidentsReviewed   Incident[]                 @relation("IncidentReviewer")
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Resident {
@@ -48,13 +53,16 @@ model Resident {
   customReference String?
   createdAt       DateTime @default(now())
 
-  carePlans       CarePlanVersion[]
-  carePlanReviews CarePlanReview[]
-  consentEntries  ConsentEntry[]
-  notes           Note[]
-  assessments     Assessment[]
-  residentDetails ResidentDetail[]
-  staffMessages   StaffMessage[]
+  carePlans        CarePlanVersion[]
+  carePlanReviews  CarePlanReview[]
+  consentEntries   ConsentEntry[]
+  notes            Note[]
+  assessments      Assessment[]
+  residentDetails  ResidentDetail[]
+  staffMessages    StaffMessage[]
+  medications      Medication[]
+  medicationAdmins MedicationAdministration[]
+  incidents        Incident[]
 }
 
 // Care plans are append-only and split into fixed categories (Mobility,
@@ -195,4 +203,88 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+// Self-service password reset. Only a SHA-256 hash of the token is stored;
+// the raw token only ever exists in the emailed link.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Medication chart entry for a resident. Rows are never edited in place
+// besides being marked inactive (stopped); history stays for audit.
+//   route: "ORAL" | "TOPICAL" | "INHALED" | "INJECTION" | "OTHER"
+model Medication {
+  id            String    @id @default(cuid())
+  residentId    String
+  resident      Resident  @relation(fields: [residentId], references: [id])
+  name          String
+  dose          String
+  route         String    @default("ORAL")
+  frequency     String // free text, e.g. "Twice daily (08:00, 20:00)"
+  instructions  String    @default("")
+  prn           Boolean   @default(false)
+  active        Boolean   @default(true)
+  stoppedAt     DateTime?
+  stoppedReason String?
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id])
+  createdAt     DateTime  @default(now())
+
+  administrations MedicationAdministration[]
+
+  @@index([residentId, active])
+}
+
+// Append-only MAR entry. outcome: "GIVEN" | "REFUSED" | "OMITTED" | "NOT_AVAILABLE"
+model MedicationAdministration {
+  id             String     @id @default(cuid())
+  medicationId   String
+  medication     Medication @relation(fields: [medicationId], references: [id])
+  residentId     String
+  resident       Resident   @relation(fields: [residentId], references: [id])
+  outcome        String
+  notes          String     @default("")
+  administeredAt DateTime   @default(now())
+  givenById      String
+  givenBy        User       @relation(fields: [givenById], references: [id])
+  createdAt      DateTime   @default(now())
+
+  @@index([residentId, administeredAt])
+  @@index([medicationId, administeredAt])
+}
+
+// Incident report. Append-only apart from the manager review fields.
+//   type: "FALL" | "NEAR_MISS" | "ACCIDENT" | "BEHAVIOUR" | "MEDICATION" | "SAFEGUARDING" | "OTHER"
+//   severity: "LOW" | "MEDIUM" | "HIGH"
+//   status: "OPEN" | "REVIEWED"
+model Incident {
+  id           String    @id @default(cuid())
+  residentId   String?
+  resident     Resident? @relation(fields: [residentId], references: [id])
+  type         String
+  severity     String
+  occurredAt   DateTime
+  location     String    @default("")
+  description  String
+  actionTaken  String    @default("")
+  status       String    @default("OPEN")
+  reportedById String
+  reportedBy   User      @relation("IncidentReporter", fields: [reportedById], references: [id])
+  reviewedById String?
+  reviewedBy   User?     @relation("IncidentReviewer", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+  reviewNotes  String?
+  createdAt    DateTime  @default(now())
+
+  @@index([residentId, occurredAt])
+  @@index([status, occurredAt])
 }

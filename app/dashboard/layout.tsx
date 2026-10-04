@@ -37,7 +37,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="min-h-screen bg-cream-50">
       {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-ink-700/10 bg-cream-100 lg:flex">
+      <aside className="fixed inset-y-0 left-0 hidden print:!hidden w-64 flex-col border-r border-ink-700/10 bg-cream-100 lg:flex">
         <div className="flex items-center gap-2 px-5 py-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl2 bg-gradient-to-br from-brand-500 to-brand-900 font-display text-base font-bold text-white shadow-sm">
             W
@@ -65,7 +65,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-10 border-b border-ink-700/10 bg-cream-50/95 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-10 print:hidden border-b border-ink-700/10 bg-cream-50/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-900 font-display text-xs font-bold text-white">
@@ -80,7 +80,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </header>
 
-      <main className="px-4 py-6 sm:px-6 lg:pl-72 lg:pr-8">
+      <main className="px-4 py-6 sm:px-6 lg:pl-72 lg:pr-8 print:!p-0">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
     </div>

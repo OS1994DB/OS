@@ -128,9 +128,11 @@ export default async function ResidentPage({ params }: { params: Promise<{ id: s
         <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Near misses" />
         <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Accidents" />
         <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Falls" />
+        <CategoryTile color="red" icon={<AlertTriangleIcon />} label="Report incident" href={`/dashboard/incidents/new?residentId=${resident.id}`} />
       </CategoryTileRow>
 
       <CategoryTileRow color="pink" title="Medical" icon={<MedicalCrossIcon className="h-4 w-4" />}>
+        <CategoryTile color="pink" icon={<MedicalCrossIcon />} label="Medication (MAR)" href={`/dashboard/residents/${resident.id}/medications`} />
         <CategoryTile color="pink" icon={<MedicalCrossIcon />} label="Creams" />
         <CategoryTile color="pink" icon={<MedicalCrossIcon />} label="Wounds" />
         <CategoryTile color="pink" icon={<MedicalCrossIcon />} label="Hospital" />
